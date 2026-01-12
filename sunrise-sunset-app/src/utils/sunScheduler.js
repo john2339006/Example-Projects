@@ -45,7 +45,13 @@ export const scheduleSunNotifications = async (latitude, longitude, daysToSchedu
             sound: true,
           },
           trigger: {
-            date: sunriseTime,
+            type: 'calendar',
+            year: sunriseTime.getFullYear(),
+            month: sunriseTime.getMonth() + 1,
+            day: sunriseTime.getDate(),
+            hour: sunriseTime.getHours(),
+            minute: sunriseTime.getMinutes(),
+            repeats: false,
           },
         });
       }
@@ -62,7 +68,13 @@ export const scheduleSunNotifications = async (latitude, longitude, daysToSchedu
             sound: true,
           },
           trigger: {
-            date: sunsetTime,
+            type: 'calendar',
+            year: sunsetTime.getFullYear(),
+            month: sunsetTime.getMonth() + 1,
+            day: sunsetTime.getDate(),
+            hour: sunsetTime.getHours(),
+            minute: sunsetTime.getMinutes(),
+            repeats: false,
           },
         });
       }
