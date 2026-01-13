@@ -10,6 +10,10 @@ export default function SettingsScreen() {
   const [selectedCountry, setSelectedCountry] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  // Local state for inputs to allow typing "-" or empty strings
+  const [sunriseOffsetStr, setSunriseOffsetStr] = useState("0");
+  const [sunsetOffsetStr, setSunsetOffsetStr] = useState("0");
+
   useEffect(() => {
     loadSettings();
   }, []);
@@ -17,6 +21,10 @@ export default function SettingsScreen() {
   const loadSettings = async () => {
     const s = await getSettings();
     setSettings(s);
+    if (s) {
+      setSunriseOffsetStr(String(s.sunriseOffset || 0));
+      setSunsetOffsetStr(String(s.sunsetOffset || 0));
+    }
   };
 
   const handleToggle = async (key, value) => {
@@ -25,8 +33,24 @@ export default function SettingsScreen() {
     reschedule(newSettings);
   };
 
-  const handleOffsetChange = async (key, value) => {
-    const numValue = parseInt(value) || 0;
+  // Updates local state immediately for responsiveness and to allow "-"
+  const handleOffsetLocalChange = (key, value) => {
+    // Allow numbers, minus sign at start, or empty string
+    if (/^-?\d*$/.test(value)) {
+      if (key === 'sunriseOffset') setSunriseOffsetStr(value);
+      if (key === 'sunsetOffset') setSunsetOffsetStr(value);
+    }
+  };
+
+  // Commits the value to settings when the user finishes editing
+  const handleOffsetBlur = async (key, valueStr) => {
+    let numValue = parseInt(valueStr);
+    if (isNaN(numValue)) numValue = 0;
+
+    // Normalize display
+    if (key === 'sunriseOffset') setSunriseOffsetStr(String(numValue));
+    if (key === 'sunsetOffset') setSunsetOffsetStr(String(numValue));
+
     const newSettings = await updateSetting(key, numValue);
     setSettings(newSettings);
     reschedule(newSettings);
@@ -133,9 +157,10 @@ export default function SettingsScreen() {
           <Text>Sunrise Offset</Text>
           <TextInput
             style={styles.input}
-            keyboardType="numeric"
-            value={String(settings.sunriseOffset)}
-            onChangeText={(val) => handleOffsetChange('sunriseOffset', val)}
+            keyboardType="numbers-and-punctuation"
+            value={sunriseOffsetStr}
+            onChangeText={(val) => handleOffsetLocalChange('sunriseOffset', val)}
+            onBlur={() => handleOffsetBlur('sunriseOffset', sunriseOffsetStr)}
           />
         </View>
 
@@ -143,9 +168,10 @@ export default function SettingsScreen() {
           <Text>Sunset Offset</Text>
           <TextInput
             style={styles.input}
-            keyboardType="numeric"
-            value={String(settings.sunsetOffset)}
-            onChangeText={(val) => handleOffsetChange('sunsetOffset', val)}
+            keyboardType="numbers-and-punctuation"
+            value={sunsetOffsetStr}
+            onChangeText={(val) => handleOffsetLocalChange('sunsetOffset', val)}
+            onBlur={() => handleOffsetBlur('sunsetOffset', sunsetOffsetStr)}
           />
         </View>
       </View>
