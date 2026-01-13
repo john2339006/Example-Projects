@@ -55,6 +55,7 @@ export default function SettingsScreen() {
         latitude: location.coords.latitude,
         longitude: location.coords.longitude,
         city: city,
+        timezone: null, // GPS uses device local time
       });
       setSettings(newSettings);
       reschedule(newSettings);
@@ -81,6 +82,7 @@ export default function SettingsScreen() {
       latitude: city.latitude,
       longitude: city.longitude,
       city: city.name,
+      timezone: city.timezone,
     });
     setSettings(newSettings);
     reschedule(newSettings);

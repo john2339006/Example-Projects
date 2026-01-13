@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { useFocusEffect } from '@react-navigation/native';
+import React, { useState, useCallback, useEffect } from 'react';
 import { View, Text, Button, StyleSheet, TouchableOpacity } from 'react-native';
 import { getSettings } from '../utils/storage';
 import { getSunTimes, scheduleSunNotifications } from '../utils/sunScheduler';
@@ -10,8 +11,13 @@ export default function HomeScreen({ navigation }) {
   const [nextEvent, setNextEvent] = useState(null);
   const [isDay, setIsDay] = useState(true);
 
+  useFocusEffect(
+    useCallback(() => {
+      loadData();
+    }, [])
+  );
+
   useEffect(() => {
-    loadData();
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
@@ -68,15 +74,50 @@ export default function HomeScreen({ navigation }) {
     return '#FFF';
   };
 
+  const formatTime = (date, options = {}) => {
+    if (!settings?.location?.timezone) return format(date, options.format || 'HH:mm:ss');
+
+    try {
+      return new Intl.DateTimeFormat('en-US', {
+        timeZone: settings.location.timezone,
+        hour12: false,
+        ...options.intl
+      }).format(date);
+    } catch (e) {
+      console.error("Invalid timezone:", settings.location.timezone);
+      return format(date, options.format || 'HH:mm:ss');
+    }
+  };
+
+  const getFormattedDate = () => {
+    if (!settings?.location?.timezone) return format(currentTime, 'EEEE, MMMM do');
+    try {
+      return new Intl.DateTimeFormat('en-US', {
+        timeZone: settings.location.timezone,
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric'
+      }).format(currentTime);
+    } catch (e) {
+      return format(currentTime, 'EEEE, MMMM do');
+    }
+  }
+
   return (
     <View style={[styles.container, { backgroundColor: getBackgroundColor() }]}>
-      <Text style={[styles.time, { color: getTextColor() }]}>{format(currentTime, 'HH:mm:ss')}</Text>
-      <Text style={[styles.date, { color: getTextColor() }]}>{format(currentTime, 'EEEE, MMMM do')}</Text>
+      <Text style={[styles.time, { color: getTextColor() }]}>
+        {formatTime(currentTime, { intl: { hour: '2-digit', minute: '2-digit', second: '2-digit' }, format: 'HH:mm:ss' })}
+      </Text>
+      <Text style={[styles.date, { color: getTextColor() }]}>
+        {getFormattedDate()}
+      </Text>
 
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Next Event</Text>
         {nextEvent ? (
-          <Text style={styles.eventText}>{nextEvent.type} at {format(nextEvent.time, 'HH:mm')}</Text>
+          <Text style={styles.eventText}>
+            {nextEvent.type} at {formatTime(nextEvent.time, { intl: { hour: '2-digit', minute: '2-digit' }, format: 'HH:mm' })}
+          </Text>
         ) : (
           <Text>Calculating...</Text>
         )}
