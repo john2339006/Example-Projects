@@ -9,7 +9,14 @@ export default function OnboardingScreen({ navigation }) {
   const [loading, setLoading] = useState(false);
 
   const requestNotificationPermissions = async () => {
-    const { status } = await Notifications.requestPermissionsAsync();
+    const { status } = await Notifications.requestPermissionsAsync({
+      ios: {
+        allowAlert: true,
+        allowBadge: true,
+        allowSound: true,
+        allowAnnouncements: true,
+      },
+    });
     if (status !== 'granted') {
       alert('Notification permissions are required for alarms to work.');
     }

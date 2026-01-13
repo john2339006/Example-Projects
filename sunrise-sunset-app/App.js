@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { StatusBar } from 'expo-status-bar';
+import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import { getSettings } from './src/utils/storage';
 
@@ -11,6 +12,7 @@ import SettingsScreen from './src/screens/SettingsScreen';
 
 const Stack = createStackNavigator();
 
+// Configure notification handler
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
     shouldShowAlert: true,
@@ -18,6 +20,20 @@ Notifications.setNotificationHandler({
     shouldSetBadge: false,
   }),
 });
+
+// Create notification channel for Android
+if (Platform.OS === 'android') {
+  Notifications.setNotificationChannelAsync('sun-events', {
+    name: 'Sun Events',
+    description: 'Notifications for sunrise and sunset events',
+    importance: Notifications.AndroidImportance.HIGH,
+    sound: 'default',
+    vibrationPattern: [0, 250, 250, 250],
+    enableVibrate: true,
+    enableLights: true,
+    lightColor: '#FF9500',
+  });
+}
 
 export default function App() {
   const [initialRoute, setInitialRoute] = useState(null);

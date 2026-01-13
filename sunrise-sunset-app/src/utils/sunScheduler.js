@@ -43,6 +43,12 @@ export const scheduleSunNotifications = async (latitude, longitude, daysToSchedu
             title: "Sunrise",
             body: "The sun is rising!",
             sound: true,
+            android: {
+              channelId: 'sun-events',
+            },
+            ios: {
+              sound: true,
+            },
           },
           trigger: {
             type: 'calendar',
@@ -66,6 +72,12 @@ export const scheduleSunNotifications = async (latitude, longitude, daysToSchedu
             title: "Sunset",
             body: "The sun is setting.",
             sound: true,
+            android: {
+              channelId: 'sun-events',
+            },
+            ios: {
+              sound: true,
+            },
           },
           trigger: {
             type: 'calendar',
