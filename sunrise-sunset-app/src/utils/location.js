@@ -1,4 +1,24 @@
 import * as Location from 'expo-location';
+import cities from '../data/cities.json';
+
+/**
+ * Reverse geocodes coordinates to get the city name.
+ * @param {number} latitude
+ * @param {number} longitude
+ * @returns {Promise<string>} City name or "Unknown Location"
+ */
+export const getCityFromCoordinates = async (latitude, longitude) => {
+  try {
+    const [address] = await Location.reverseGeocodeAsync({ latitude, longitude });
+    if (address) {
+      return address.city || address.region || address.name || "Unknown Location";
+    }
+    return "Unknown Location";
+  } catch (error) {
+    console.error("Error reverse geocoding:", error);
+    return "Unknown Location";
+  }
+};
 
 /**
  * Requests location permissions and returns the current position.
@@ -20,15 +40,8 @@ export const getCurrentLocation = async () => {
 };
 
 /**
- * Returns a list of supported cities for manual selection (mocked).
+ * Returns a list of supported cities for manual selection.
  */
 export const getManualCities = () => {
-  return [
-    { name: "New York", latitude: 40.7128, longitude: -74.0060, timezone: "America/New_York" },
-    { name: "London", latitude: 51.5074, longitude: -0.1278, timezone: "Europe/London" },
-    { name: "Tokyo", latitude: 35.6762, longitude: 139.6503, timezone: "Asia/Tokyo" },
-    { name: "Sydney", latitude: -33.8688, longitude: 151.2093, timezone: "Australia/Sydney" },
-    { name: "Paris", latitude: 48.8566, longitude: 2.3522, timezone: "Europe/Paris" },
-    { name: "San Francisco", latitude: 37.7749, longitude: -122.4194, timezone: "America/Los_Angeles" },
-  ];
+  return cities;
 };

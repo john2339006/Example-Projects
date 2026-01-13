@@ -1,10 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Switch, StyleSheet, ScrollView, TextInput, Button } from 'react-native';
+import { View, Text, Switch, StyleSheet, ScrollView, TextInput, Button, Alert, TouchableOpacity } from 'react-native';
+import { getCurrentLocation, getManualCities, getCityFromCoordinates } from '../utils/location';
 import { getSettings, updateSetting } from '../utils/storage';
 import { scheduleSunNotifications } from '../utils/sunScheduler';
 
 export default function SettingsScreen() {
   const [settings, setSettings] = useState(null);
+  const [manualStep, setManualStep] = useState(null); // 'country', 'city', null
+  const [selectedCountry, setSelectedCountry] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -26,6 +30,62 @@ export default function SettingsScreen() {
     const newSettings = await updateSetting(key, numValue);
     setSettings(newSettings);
     reschedule(newSettings);
+  };
+
+  const handleChangeLocation = () => {
+    Alert.alert(
+      "Change Location",
+      "Are you sure you want to change your location?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { text: "Yes", onPress: () => setManualStep('choice') }
+      ]
+    );
+  };
+
+  const handleGPSLocation = async () => {
+    setLoading(true);
+    const { status, location } = await getCurrentLocation();
+
+    if (status === 'granted' && location) {
+      const city = await getCityFromCoordinates(location.coords.latitude, location.coords.longitude);
+      setLoading(false);
+
+      const newSettings = await updateSetting('location', {
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+        city: city,
+      });
+      setSettings(newSettings);
+      reschedule(newSettings);
+      setManualStep(null);
+      alert(`Location updated to ${city} via GPS!`);
+    } else {
+      setLoading(false);
+      alert("Permission denied or location unavailable.");
+    }
+  };
+
+  const getUniqueCountries = () => {
+    const cities = getManualCities();
+    const countries = [...new Set(cities.map(c => c.country))];
+    return countries.sort();
+  };
+
+  const getCitiesForCountry = (country) => {
+    return getManualCities().filter(c => c.country === country).sort((a, b) => a.name.localeCompare(b.name));
+  };
+
+  const handleCitySelect = async (city) => {
+    const newSettings = await updateSetting('location', {
+      latitude: city.latitude,
+      longitude: city.longitude,
+      city: city.name,
+    });
+    setSettings(newSettings);
+    reschedule(newSettings);
+    setManualStep(null);
+    alert(`Location updated to ${city.name}!`);
   };
 
   const reschedule = async (newSettings) => {
@@ -91,7 +151,48 @@ export default function SettingsScreen() {
       <View style={styles.section}>
         <Text style={styles.header}>Location</Text>
         <Text>City: {settings.location?.city || "Unknown"}</Text>
-        {/* Re-enter onboarding logic could go here */}
+        <View style={styles.spacer} />
+        {!manualStep && (
+          <Button title="Change Location" onPress={() => handleChangeLocation()} />
+        )}
+
+        {manualStep === 'choice' && (
+          <View style={styles.choiceContainer}>
+            <Text style={styles.subHeader}>How do you want to set your location?</Text>
+            <Button title="Use GPS" onPress={handleGPSLocation} disabled={loading} />
+            <View style={styles.spacer} />
+            <Button title="Select Manually" onPress={() => setManualStep('country')} />
+            <View style={styles.spacer} />
+            <Button title="Cancel" color="red" onPress={() => setManualStep(null)} />
+          </View>
+        )}
+
+        {manualStep === 'country' && (
+          <View>
+            <Text style={styles.subHeader}>Select Country</Text>
+            {getUniqueCountries().map(country => (
+              <TouchableOpacity key={country} style={styles.listItem} onPress={() => {
+                setSelectedCountry(country);
+                setManualStep('city');
+              }}>
+                <Text>{country}</Text>
+              </TouchableOpacity>
+            ))}
+            <Button title="Back" onPress={() => setManualStep('choice')} />
+          </View>
+        )}
+
+        {manualStep === 'city' && (
+          <View>
+            <Text style={styles.subHeader}>Select City</Text>
+            {getCitiesForCountry(selectedCountry).map(city => (
+              <TouchableOpacity key={city.name} style={styles.listItem} onPress={() => handleCitySelect(city)}>
+                <Text>{city.name}</Text>
+              </TouchableOpacity>
+            ))}
+            <Button title="Back" onPress={() => setManualStep('country')} />
+          </View>
+        )}
       </View>
 
     </ScrollView>
@@ -130,5 +231,24 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#777',
     marginBottom: 10,
+  },
+  spacer: {
+    height: 10,
+  },
+  choiceContainer: {
+    marginTop: 10,
+    padding: 10,
+    backgroundColor: '#f9f9f9',
+    borderRadius: 5,
+  },
+  subHeader: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  listItem: {
+    padding: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: '#eee',
   },
 });
