@@ -76,7 +76,6 @@ describe('sunScheduler', () => {
 
       // Check the first call argument
       const calls = Notifications.scheduleNotificationAsync.mock.calls;
-      const scheduledDate = calls[0][0].trigger.date;
 
       // Expected: fixedSunrise + 10 mins
       const expectedDate = new Date(fixedSunrise.getTime() + offset * 60000);
@@ -85,7 +84,52 @@ describe('sunScheduler', () => {
       const sunriseCall = calls.find(c => c[0].content.title === "Sunrise");
 
       expect(sunriseCall).toBeDefined();
-      expect(sunriseCall[0].trigger.date.getTime()).toBe(expectedDate.getTime());
+
+      // The trigger uses calendar format, not date format
+      const trigger = sunriseCall[0].trigger;
+      expect(trigger.type).toBe('calendar');
+      expect(trigger.year).toBe(expectedDate.getFullYear());
+      expect(trigger.month).toBe(expectedDate.getMonth() + 1);
+      expect(trigger.day).toBe(expectedDate.getDate());
+      expect(trigger.hour).toBe(expectedDate.getHours());
+      expect(trigger.minute).toBe(expectedDate.getMinutes());
+
+      spy.mockRestore();
+    });
+
+    it('should use separate channels and sounds for sunrise and sunset', async () => {
+      // Mock SunCalc to return fixed times in the future
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      const fixedSunrise = new Date(tomorrow);
+      fixedSunrise.setHours(6, 0, 0, 0);
+      const fixedSunset = new Date(tomorrow);
+      fixedSunset.setHours(18, 0, 0, 0);
+
+      const spy = jest.spyOn(SunCalc, 'getTimes').mockReturnValue({
+        sunrise: fixedSunrise,
+        sunset: fixedSunset,
+      });
+
+      await scheduleSunNotifications(latitude, longitude, 1);
+
+      const calls = Notifications.scheduleNotificationAsync.mock.calls;
+
+      // Find sunrise and sunset notifications
+      const sunriseCall = calls.find(c => c[0].content.title === "Sunrise");
+      const sunsetCall = calls.find(c => c[0].content.title === "Sunset");
+
+      // Verify sunrise notification
+      expect(sunriseCall).toBeDefined();
+      expect(sunriseCall[0].content.android.channelId).toBe('sunrise-notifications');
+      expect(sunriseCall[0].content.sound).toBe('sunrise.wav'); // Android uses full filename
+      expect(sunriseCall[0].content.ios.sound).toBe('sunrise'); // iOS without extension
+
+      // Verify sunset notification
+      expect(sunsetCall).toBeDefined();
+      expect(sunsetCall[0].content.android.channelId).toBe('sunset-notifications');
+      expect(sunsetCall[0].content.sound).toBe('sunset.wav'); // Android uses full filename
+      expect(sunsetCall[0].content.ios.sound).toBe('sunset'); // iOS without extension
 
       spy.mockRestore();
     });

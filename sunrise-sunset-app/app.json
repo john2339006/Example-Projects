@@ -2,6 +2,7 @@
   "expo": {
     "name": "sunrise-sunset-app",
     "slug": "sunrise-sunset-app",
+    "scheme": "sunrise-sunset-app",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -13,17 +14,45 @@
       "backgroundColor": "#ffffff"
     },
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "remote-notification",
+          "remote-notification"
+        ],
+        "ITSAppUsesNonExemptEncryption": false
+      },
+      "bundleIdentifier": "com.anonymous.sunrisesunsetapp"
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.anonymous.sunrisesunsetapp"
     },
+    "plugins": [
+      [
+        "expo-notifications",
+        {
+          "sounds": [
+            "./assets/sounds/sunrise.wav",
+            "./assets/sounds/sunset.wav"
+          ]
+        }
+      ]
+    ],
+    "assetBundlePatterns": [
+      "assets/**/*"
+    ],
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "555bbc69-785e-408f-8863-280c6418b77b"
+      }
     }
   }
 }

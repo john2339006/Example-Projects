@@ -42,12 +42,12 @@ export const scheduleSunNotifications = async (latitude, longitude, daysToSchedu
           content: {
             title: "Sunrise",
             body: "The sun is rising!",
-            sound: true,
+            sound: 'sunrise.wav', // Android uses full filename
             android: {
-              channelId: 'sun-events',
+              channelId: 'sunrise-notifications',
             },
             ios: {
-              sound: true,
+              sound: 'sunrise', // iOS requires filename without extension
             },
           },
           trigger: {
@@ -71,12 +71,12 @@ export const scheduleSunNotifications = async (latitude, longitude, daysToSchedu
           content: {
             title: "Sunset",
             body: "The sun is setting.",
-            sound: true,
+            sound: 'sunset.wav', // Android uses full filename
             android: {
-              channelId: 'sun-events',
+              channelId: 'sunset-notifications',
             },
             ios: {
-              sound: true,
+              sound: 'sunset', // iOS requires filename without extension
             },
           },
           trigger: {

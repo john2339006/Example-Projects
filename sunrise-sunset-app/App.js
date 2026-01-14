@@ -21,17 +21,30 @@ Notifications.setNotificationHandler({
   }),
 });
 
-// Create notification channel for Android
+// Create notification channels for Android
 if (Platform.OS === 'android') {
-  Notifications.setNotificationChannelAsync('sun-events', {
-    name: 'Sun Events',
-    description: 'Notifications for sunrise and sunset events',
+  // Sunrise notification channel
+  Notifications.setNotificationChannelAsync('sunrise-notifications', {
+    name: 'Sunrise Notifications',
+    description: 'Notifications for sunrise events',
     importance: Notifications.AndroidImportance.HIGH,
-    sound: 'default',
+    sound: 'sunrise.wav',
     vibrationPattern: [0, 250, 250, 250],
     enableVibrate: true,
     enableLights: true,
-    lightColor: '#FF9500',
+    lightColor: '#FFB347', // Warm orange for sunrise
+  });
+
+  // Sunset notification channel
+  Notifications.setNotificationChannelAsync('sunset-notifications', {
+    name: 'Sunset Notifications',
+    description: 'Notifications for sunset events',
+    importance: Notifications.AndroidImportance.HIGH,
+    sound: 'sunset.wav',
+    vibrationPattern: [0, 250, 250, 250],
+    enableVibrate: true,
+    enableLights: true,
+    lightColor: '#FF6B6B', // Warm red for sunset
   });
 }
 
